@@ -6,7 +6,7 @@ import { User, LoginRequest, RegisterRequest, AuthToken } from '../models/user.m
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private apiUrl = 'http://localhost:8000';
+  private apiUrl = 'https://jobtracker-api-8t1b.onrender.com';
 
   // Angular 19 signals — reactive state without BehaviorSubject boilerplate
   currentUser = signal<User | null>(null);

@@ -4,7 +4,7 @@ import { Job, JobCreate, Application, ApplicationCreate, ResumeAnalysisRequest, 
 
 @Injectable({ providedIn: 'root' })
 export class JobService {
-  private apiUrl = 'http://localhost:8000';
+  private apiUrl = 'https://jobtracker-api-8t1b.onrender.com';
 
   constructor(private http: HttpClient) {}
 
