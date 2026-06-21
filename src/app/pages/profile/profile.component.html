@@ -2,6 +2,19 @@
 
 <div class="max-w-3xl mx-auto px-4 py-6 sm:py-10">
 
+  <!-- Back to Jobs banner — shown when redirected from jobs page -->
+  @if (cameFromJobs()) {
+    <div class="bg-primary-50 border border-primary-200 rounded-xl px-4 py-3 mb-5 flex items-center justify-between gap-3">
+      <p class="text-sm text-primary-700 font-medium">
+        💼 Add your resume below to get instant AI match scores when adding jobs
+      </p>
+      <button (click)="goBackToJobs()"
+        class="flex-shrink-0 text-xs text-primary-600 hover:text-primary-800 font-semibold underline underline-offset-2 transition">
+        Skip for now
+      </button>
+    </div>
+  }
+
   <!-- Page Header -->
   <div class="mb-6 sm:mb-8">
     <h1 class="text-xl sm:text-2xl font-bold text-gray-900">My Profile</h1>
@@ -27,8 +40,15 @@
 
   <!-- Success / Error Messages -->
   @if (successMsg()) {
-    <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-4 text-sm">
-      ✓ {{ successMsg() }}
+    <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-4 text-sm flex items-center justify-between gap-3">
+      <span>✓ {{ successMsg() }}</span>
+      <!-- Back to Jobs button shown after saving if came from jobs -->
+      @if (cameFromJobs()) {
+        <button (click)="goBackToJobs()"
+          class="flex-shrink-0 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">
+          Back to Jobs →
+        </button>
+      }
     </div>
   }
   @if (errorMsg()) {
@@ -75,38 +95,29 @@
       </div>
     }
 
-    <!-- Saved resume preview (view mode) -->
+    <!-- Saved resume preview -->
     @if (hasResume() && !editMode()) {
       <div class="bg-gray-50 rounded-xl p-4 max-h-64 overflow-y-auto">
         <pre class="text-xs text-gray-600 whitespace-pre-wrap font-sans leading-relaxed">{{ authService.savedResume() }}</pre>
       </div>
-      <p class="text-xs text-gray-400 mt-2">
-        {{ authService.savedResume()?.length || 0 }} characters saved
-      </p>
+      <p class="text-xs text-gray-400 mt-2">{{ authService.savedResume()?.length || 0 }} characters saved</p>
     }
 
     <!-- Edit mode -->
     @if (editMode()) {
-
-      <!-- Tabs: Text / Upload PDF -->
       <div class="flex gap-1 p-1 bg-gray-100 rounded-lg mb-4 w-fit">
         <button (click)="activeTab.set('text')"
-          [class]="activeTab() === 'text'
-            ? 'bg-white text-gray-900 shadow-sm'
-            : 'text-gray-500 hover:text-gray-700'"
+          [class]="activeTab() === 'text' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
           class="px-4 py-1.5 rounded-md text-sm font-medium transition">
           Paste Text
         </button>
         <button (click)="activeTab.set('upload')"
-          [class]="activeTab() === 'upload'
-            ? 'bg-white text-gray-900 shadow-sm'
-            : 'text-gray-500 hover:text-gray-700'"
+          [class]="activeTab() === 'upload' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
           class="px-4 py-1.5 rounded-md text-sm font-medium transition">
           Upload PDF
         </button>
       </div>
 
-      <!-- Text tab -->
       @if (activeTab() === 'text') {
         @if (extractedPreview()) {
           <div class="flex items-center gap-2 mb-2 text-xs text-green-700 bg-green-50 border border-green-200 px-3 py-2 rounded-lg">
@@ -126,7 +137,6 @@
         <p class="text-xs text-gray-400 mt-1">{{ draftText().length }} characters</p>
       }
 
-      <!-- Upload PDF tab -->
       @if (activeTab() === 'upload') {
         <div class="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center hover:border-primary-300 transition">
           @if (extracting()) {
@@ -143,7 +153,7 @@
                 d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
             </svg>
             <p class="text-sm text-gray-600 font-medium mb-1">Click to upload your resume PDF</p>
-            <p class="text-xs text-gray-400 mb-4">PDF only · Max 5MB · Text will be extracted automatically</p>
+            <p class="text-xs text-gray-400 mb-4">PDF only · Max 5MB · Text extracted automatically</p>
             <label class="bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium px-5 py-2 rounded-lg transition cursor-pointer">
               Choose PDF
               <input type="file" accept="application/pdf" class="hidden" (change)="onFileSelected($event)" />
@@ -152,12 +162,11 @@
         </div>
         @if (selectedFileName() && !extracting()) {
           <p class="text-xs text-gray-500 mt-2 text-center">
-            📄 {{ selectedFileName() }} — text extracted, switch to Paste Text tab to review
+            📄 {{ selectedFileName() }} — switch to Paste Text tab to review
           </p>
         }
       }
 
-      <!-- Edit actions -->
       <div class="flex gap-3 mt-4">
         <button (click)="saveResume()" [disabled]="saving() || !draftText().trim()"
           class="bg-primary-600 hover:bg-primary-700 disabled:bg-primary-300 text-white font-medium px-5 py-2 rounded-lg text-sm transition">
@@ -171,4 +180,18 @@
     }
 
   </div>
+
+  <!-- Back to Jobs button — always visible if came from jobs and resume is saved -->
+  @if (cameFromJobs() && hasResume() && !editMode()) {
+    <div class="mt-5 text-center">
+      <button (click)="goBackToJobs()"
+        class="bg-primary-600 hover:bg-primary-700 text-white font-semibold px-6 py-3 rounded-xl transition text-sm inline-flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+        Back to Jobs — Start Adding
+      </button>
+    </div>
+  }
+
 </div>
