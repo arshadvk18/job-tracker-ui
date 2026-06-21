@@ -1,38 +1,38 @@
 <app-navbar />
 
-<div class="max-w-7xl mx-auto px-4 py-8">
+<div class="max-w-7xl mx-auto px-4 py-6 sm:py-8">
 
   <!-- Header -->
-  <div class="mb-8">
-    <h1 class="text-2xl font-bold text-gray-900">
+  <div class="mb-6">
+    <h1 class="text-xl sm:text-2xl font-bold text-gray-900">
       Welcome back, {{ authService.currentUser()?.full_name || 'there' }} 👋
     </h1>
-    <p class="text-gray-500 mt-1">Here's your job search at a glance</p>
+    <p class="text-gray-500 mt-1 text-sm">Here's your job search at a glance</p>
   </div>
 
   <!-- Stats -->
-  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-    <div class="bg-white rounded-xl border border-gray-200 p-5">
-      <p class="text-sm text-gray-500">Total Applied</p>
-      <p class="text-3xl font-bold text-gray-900 mt-1">{{ stats.total }}</p>
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+    <div class="bg-white rounded-xl border border-gray-200 p-4 sm:p-5">
+      <p class="text-xs sm:text-sm text-gray-500">Total Applied</p>
+      <p class="text-2xl sm:text-3xl font-bold text-gray-900 mt-1">{{ stats.total }}</p>
     </div>
-    <div class="bg-white rounded-xl border border-gray-200 p-5">
-      <p class="text-sm text-gray-500">In Interview</p>
-      <p class="text-3xl font-bold text-purple-600 mt-1">{{ stats.interviews }}</p>
+    <div class="bg-white rounded-xl border border-gray-200 p-4 sm:p-5">
+      <p class="text-xs sm:text-sm text-gray-500">In Interview</p>
+      <p class="text-2xl sm:text-3xl font-bold text-purple-600 mt-1">{{ stats.interviews }}</p>
     </div>
-    <div class="bg-white rounded-xl border border-gray-200 p-5">
-      <p class="text-sm text-gray-500">Offers</p>
-      <p class="text-3xl font-bold text-green-600 mt-1">{{ stats.offers }}</p>
+    <div class="bg-white rounded-xl border border-gray-200 p-4 sm:p-5">
+      <p class="text-xs sm:text-sm text-gray-500">Offers</p>
+      <p class="text-2xl sm:text-3xl font-bold text-green-600 mt-1">{{ stats.offers }}</p>
     </div>
-    <div class="bg-white rounded-xl border border-gray-200 p-5">
-      <p class="text-sm text-gray-500">Rejected</p>
-      <p class="text-3xl font-bold text-red-500 mt-1">{{ stats.rejected }}</p>
+    <div class="bg-white rounded-xl border border-gray-200 p-4 sm:p-5">
+      <p class="text-xs sm:text-sm text-gray-500">Rejected</p>
+      <p class="text-2xl sm:text-3xl font-bold text-red-500 mt-1">{{ stats.rejected }}</p>
     </div>
   </div>
 
   <!-- Loading -->
   @if (loading()) {
-    <div class="text-center py-16 text-gray-400">Loading your applications...</div>
+    <div class="text-center py-16 text-gray-400 text-sm">Loading your applications...</div>
   }
 
   <!-- Empty state -->
@@ -48,15 +48,20 @@
 
   <!-- Kanban Board -->
   @if (!loading() && applications().length > 0) {
-    <div class="overflow-x-auto pb-4">
-      <div class="flex gap-4 min-w-max">
+    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+      Application Pipeline
+    </h2>
+    <!-- horizontal scroll on mobile, normal on desktop -->
+    <div class="overflow-x-auto pb-4 -mx-4 px-4">
+      <div class="flex gap-3 sm:gap-4" style="min-width: max-content;">
         @for (col of columns; track col.status) {
-          <div class="w-64 flex-shrink-0">
+          <div class="w-56 sm:w-64 flex-shrink-0">
 
             <!-- Column Header -->
             <div class="flex items-center justify-between mb-3">
-              <span class="text-sm font-semibold text-gray-700">{{ col.label }}</span>
-              <span class="text-xs px-2 py-0.5 rounded-full {{ col.color }} font-medium">
+              <span class="text-xs sm:text-sm font-semibold text-gray-700">{{ col.label }}</span>
+              <span class="text-xs px-2 py-0.5 rounded-full font-medium"
+                [class]="col.color">
                 {{ getByStatus(col.status).length }}
               </span>
             </div>
@@ -64,8 +69,8 @@
             <!-- Cards -->
             <div class="space-y-3">
               @for (app of getByStatus(col.status); track app.id) {
-                <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition">
-                  <p class="font-semibold text-gray-900 text-sm">{{ app.job.title }}</p>
+                <div class="bg-white rounded-xl border border-gray-200 p-3 sm:p-4 shadow-sm hover:shadow-md transition">
+                  <p class="font-semibold text-gray-900 text-xs sm:text-sm leading-tight">{{ app.job.title }}</p>
                   <p class="text-gray-500 text-xs mt-0.5">{{ app.job.company }}</p>
 
                   @if (app.job.location) {
@@ -78,7 +83,7 @@
                   <!-- Move status -->
                   <select
                     (change)="updateStatus(app.id, $any($event.target).value)"
-                    class="mt-3 w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 focus:outline-none focus:ring-1 focus:ring-primary-500">
+                    class="mt-3 w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 focus:outline-none focus:ring-1 focus:ring-primary-500 bg-white">
                     <option value="applied"      [selected]="app.status === 'applied'">Applied</option>
                     <option value="phone_screen" [selected]="app.status === 'phone_screen'">Phone Screen</option>
                     <option value="technical"    [selected]="app.status === 'technical'">Technical</option>
