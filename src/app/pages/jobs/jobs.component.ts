@@ -50,7 +50,6 @@ export class JobsComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    // Clean up timers when component is destroyed
     if (this.countdownTimer) clearInterval(this.countdownTimer);
     if (this.toastTimer) clearTimeout(this.toastTimer);
   }
@@ -76,7 +75,6 @@ export class JobsComponent implements OnInit, OnDestroy {
     return this.applications().some(a => a.job_id === jobId);
   }
 
-  // Called when "+ Add Job" is clicked
   handleAddJobClick() {
     if (!this.authService.savedResume()) {
       this.openResumeModal();
@@ -88,8 +86,6 @@ export class JobsComponent implements OnInit, OnDestroy {
   openResumeModal() {
     this.showResumeModal.set(true);
     this.countdown.set(10);
-
-    // Start countdown
     this.countdownTimer = setInterval(() => {
       this.countdown.update(c => c - 1);
       if (this.countdown() <= 0) {
@@ -120,15 +116,16 @@ export class JobsComponent implements OnInit, OnDestroy {
   }
 
   submitJob() {
-    if (!this.form.title || !this.form.company) {
-      this.error.set('Title and company are required');
+    // ← description is now mandatory alongside title and company
+    if (!this.form.title || !this.form.company || !this.form.description?.trim()) {
+      this.error.set('Title, company and job description are required');
       return;
     }
     this.submitting.set(true);
     this.error.set('');
 
     const hasResume = !!this.authService.savedResume();
-    const jobDescription = this.form.description?.trim() ?? '';
+    const jobDescription = this.form.description.trim();
 
     this.jobService.createJob(this.form).pipe(
       switchMap(job => {
@@ -158,8 +155,6 @@ export class JobsComponent implements OnInit, OnDestroy {
         if (result && 'match_score' in result) {
           this.loadApplications();
           this.showToast(`AI analysis complete — score: ${result.match_score}%`);
-        } else if (!jobDescription) {
-          this.showToast('Job saved! Add a description next time to get AI analysis.', 'error');
         } else {
           this.showToast('Job saved successfully!');
         }
