@@ -21,3 +21,18 @@ export interface AuthToken {
   access_token: string;
   token_type: string;
 }
+
+// --- Resume interfaces (new) ---
+
+export interface ResumeSave {
+  resume_text: string;
+}
+
+export interface ResumeResponse {
+  resume_text: string | null;
+}
+
+export interface PDFExtractResponse {
+  extracted_text: string;
+  char_count: number;
+}

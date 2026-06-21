@@ -37,6 +37,10 @@ import { AuthService } from '../../core/services/auth.service';
               class="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 transition">
               AI Analyzer
             </a>
+            <a routerLink="/profile" routerLinkActive="bg-primary-50 text-primary-600"
+              class="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 transition">
+              Profile
+            </a>
           </div>
 
           <!-- Desktop User -->
@@ -50,16 +54,14 @@ import { AuthService } from '../../core/services/auth.service';
             </button>
           </div>
 
-          <!-- Mobile hamburger button -->
+          <!-- Mobile hamburger -->
           <button (click)="menuOpen.set(!menuOpen())"
             class="md:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-50 transition">
             @if (menuOpen()) {
-              <!-- X icon -->
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
               </svg>
             } @else {
-              <!-- Hamburger icon -->
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
               </svg>
@@ -86,6 +88,11 @@ import { AuthService } from '../../core/services/auth.service';
             (click)="menuOpen.set(false)"
             class="block px-4 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 transition">
             AI Analyzer
+          </a>
+          <a routerLink="/profile" routerLinkActive="bg-primary-50 text-primary-600"
+            (click)="menuOpen.set(false)"
+            class="block px-4 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 transition">
+            Profile
           </a>
           <div class="border-t border-gray-100 mt-2 pt-2 flex items-center justify-between">
             <span class="text-sm text-gray-600 truncate">

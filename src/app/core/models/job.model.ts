@@ -26,6 +26,16 @@ export type ApplicationStatus =
   | 'offer'
   | 'rejected';
 
+// AI analysis result shape — mirrors backend ResumeAnalysisResponse
+export interface ApplicationAnalysis {
+  match_score: number;
+  matched_keywords: string[];
+  missing_keywords: string[];
+  experience_match: 'Strong' | 'Moderate' | 'Weak';
+  summary: string;
+  interview_tips: string[];
+}
+
 export interface Application {
   id: number;
   job_id: number;
@@ -35,6 +45,8 @@ export interface Application {
   applied_at: string;
   updated_at: string | null;
   job: Job;
+  ai_analysis: ApplicationAnalysis | null;   // ← new
+  analyzed_at: string | null;                // ← new
 }
 
 export interface ApplicationCreate {
@@ -45,6 +57,7 @@ export interface ApplicationCreate {
 export interface ResumeAnalysisRequest {
   resume_text: string;
   job_description: string;
+  application_id?: number;                   // ← new: optional, saves result to DB
 }
 
 export interface ResumeAnalysisResponse {
@@ -54,4 +67,5 @@ export interface ResumeAnalysisResponse {
   experience_match: 'Strong' | 'Moderate' | 'Weak';
   summary: string;
   interview_tips: string[];
+  saved_to_application: boolean;             // ← new
 }

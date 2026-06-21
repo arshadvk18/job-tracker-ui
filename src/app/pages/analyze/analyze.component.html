@@ -1,38 +1,114 @@
 <app-navbar />
 
-<div class="max-w-5xl mx-auto px-4 py-8">
+<div class="max-w-5xl mx-auto px-4 py-6 sm:py-8">
 
-  <div class="mb-8">
-    <h1 class="text-2xl font-bold text-gray-900">AI Resume Analyzer</h1>
-    <p class="text-gray-500 mt-1">Paste your resume and a job description to get an AI-powered match score</p>
+  <div class="mb-6 sm:mb-8">
+    <h1 class="text-xl sm:text-2xl font-bold text-gray-900">AI Resume Analyzer</h1>
+    <p class="text-gray-500 mt-1 text-sm">Match your resume against a job description using AI</p>
   </div>
 
   @if (error()) {
-    <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6 text-sm">
+    <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-5 text-sm">
       {{ error() }}
     </div>
   }
 
-  <!-- Input Section -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-    <div class="bg-white border border-gray-200 rounded-2xl p-6">
-      <label class="block text-sm font-semibold text-gray-700 mb-2">Your Resume</label>
-      <textarea [(ngModel)]="resumeText" rows="14"
-        placeholder="Paste your resume text here..."
-        class="w-full text-sm text-gray-700 border border-gray-200 rounded-lg p-3 focus:ring-2 focus:ring-primary-500 outline-none resize-none">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
+
+    <!-- Resume Panel -->
+    <div class="bg-white border border-gray-200 rounded-2xl p-5 sm:p-6">
+      <div class="flex items-center justify-between mb-3">
+        <label class="text-sm font-semibold text-gray-700">Your Resume</label>
+
+        <!-- Saved resume toggle -->
+        @if (authService.savedResume()) {
+          <button
+            (click)="toggleSavedResume(!useSavedResume())"
+            [class]="useSavedResume()
+              ? 'bg-primary-600 text-white'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+            class="text-xs font-medium px-3 py-1.5 rounded-lg transition flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M5 13l4 4L19 7"/>
+            </svg>
+            {{ useSavedResume() ? 'Using saved resume' : 'Use saved resume' }}
+          </button>
+        } @else {
+          <a routerLink="/profile"
+            class="text-xs text-primary-600 hover:text-primary-700 font-medium transition">
+            Save resume in Profile →
+          </a>
+        }
+      </div>
+
+      <!-- PDF upload strip -->
+      <div class="mb-3">
+        @if (extracting()) {
+          <div class="flex items-center gap-2 text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+            <svg class="animate-spin w-4 h-4 text-primary-500 flex-shrink-0" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+            </svg>
+            Extracting text from PDF...
+          </div>
+        } @else {
+          <label class="flex items-center gap-2 text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 cursor-pointer hover:bg-gray-100 transition w-fit">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+            </svg>
+            {{ selectedFileName() || 'Upload PDF instead' }}
+            <input type="file" accept="application/pdf" class="hidden" (change)="onFileSelected($event)" />
+          </label>
+        }
+      </div>
+
+      <textarea
+        [value]="resumeText()"
+        (input)="resumeText.set($any($event.target).value); useSavedResume.set(false)"
+        rows="12"
+        placeholder="Paste your resume text here, or upload a PDF above..."
+        class="w-full text-sm text-gray-700 border border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-primary-500 outline-none resize-none">
       </textarea>
     </div>
-    <div class="bg-white border border-gray-200 rounded-2xl p-6">
-      <label class="block text-sm font-semibold text-gray-700 mb-2">Job Description</label>
-      <textarea [(ngModel)]="jobDescription" rows="14"
+
+    <!-- Job Description Panel -->
+    <div class="bg-white border border-gray-200 rounded-2xl p-5 sm:p-6">
+      <label class="block text-sm font-semibold text-gray-700 mb-3">Job Description</label>
+      <textarea
+        [value]="jobDescription()"
+        (input)="jobDescription.set($any($event.target).value)"
+        rows="15"
         placeholder="Paste the job description here..."
-        class="w-full text-sm text-gray-700 border border-gray-200 rounded-lg p-3 focus:ring-2 focus:ring-primary-500 outline-none resize-none">
+        class="w-full text-sm text-gray-700 border border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-primary-500 outline-none resize-none">
       </textarea>
     </div>
   </div>
 
-  <button (click)="analyze()" [disabled]="loading()"
-    class="w-full bg-primary-600 hover:bg-primary-700 disabled:bg-primary-300 text-white font-semibold py-3.5 rounded-xl transition text-sm">
+  <!-- Link to application (optional) -->
+  @if (applications().length > 0) {
+    <div class="bg-white border border-gray-200 rounded-2xl p-4 sm:p-5 mb-5">
+      <label class="block text-sm font-semibold text-gray-700 mb-2">
+        Save result to application
+        <span class="text-gray-400 font-normal ml-1">(optional)</span>
+      </label>
+      <select
+        [value]="selectedApplicationId() ?? ''"
+        (change)="selectedApplicationId.set($any($event.target).value ? +$any($event.target).value : null)"
+        class="w-full sm:w-auto text-sm border border-gray-200 rounded-lg px-3 py-2 text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white">
+        <option value="">Don't save to any application</option>
+        @for (app of applications(); track app.id) {
+          <option [value]="app.id">{{ app.job.title }} — {{ app.job.company }}</option>
+        }
+      </select>
+      <p class="text-xs text-gray-400 mt-1.5">The AI score will appear on your Kanban card</p>
+    </div>
+  }
+
+  <!-- Analyze Button -->
+  <button (click)="analyze()" [disabled]="loading() || extracting()"
+    class="w-full bg-primary-600 hover:bg-primary-700 disabled:bg-primary-300 text-white font-semibold py-3.5 rounded-xl transition text-sm mb-8">
     @if (loading()) {
       <span class="flex items-center justify-center gap-2">
         <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
@@ -48,13 +124,22 @@
 
   <!-- Results -->
   @if (result()) {
-    <div class="mt-8 space-y-5">
+    <div class="space-y-5">
+
+      @if (result()!.saved_to_application) {
+        <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm flex items-center gap-2">
+          <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+          Analysis saved to your application — visible on the Dashboard Kanban card
+        </div>
+      }
 
       <!-- Score Card -->
-      <div class="bg-white border border-gray-200 rounded-2xl p-6">
+      <div class="bg-white border border-gray-200 rounded-2xl p-5 sm:p-6">
         <div class="flex items-center justify-between mb-3">
-          <h2 class="text-lg font-semibold text-gray-900">Match Score</h2>
-          <span class="text-4xl font-bold {{ scoreColor }}">{{ result()!.match_score }}%</span>
+          <h2 class="text-base sm:text-lg font-semibold text-gray-900">Match Score</h2>
+          <span class="text-3xl sm:text-4xl font-bold {{ scoreColor }}">{{ result()!.match_score }}%</span>
         </div>
         <div class="w-full bg-gray-100 rounded-full h-3">
           <div class="h-3 rounded-full transition-all duration-700 {{ scoreBarColor }}"
@@ -74,32 +159,28 @@
       </div>
 
       <!-- Keywords -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <div class="bg-white border border-gray-200 rounded-2xl p-6">
-          <h3 class="font-semibold text-gray-900 mb-3">✅ Matched Keywords</h3>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="bg-white border border-gray-200 rounded-2xl p-5">
+          <h3 class="font-semibold text-gray-900 mb-3 text-sm sm:text-base">✅ Matched Keywords</h3>
           <div class="flex flex-wrap gap-2">
             @for (kw of result()!.matched_keywords; track kw) {
-              <span class="bg-green-50 text-green-700 border border-green-200 text-xs px-3 py-1 rounded-full">
-                {{ kw }}
-              </span>
+              <span class="bg-green-50 text-green-700 border border-green-200 text-xs px-3 py-1 rounded-full">{{ kw }}</span>
             }
           </div>
         </div>
-        <div class="bg-white border border-gray-200 rounded-2xl p-6">
-          <h3 class="font-semibold text-gray-900 mb-3">❌ Missing Keywords</h3>
+        <div class="bg-white border border-gray-200 rounded-2xl p-5">
+          <h3 class="font-semibold text-gray-900 mb-3 text-sm sm:text-base">❌ Missing Keywords</h3>
           <div class="flex flex-wrap gap-2">
             @for (kw of result()!.missing_keywords; track kw) {
-              <span class="bg-red-50 text-red-700 border border-red-200 text-xs px-3 py-1 rounded-full">
-                {{ kw }}
-              </span>
+              <span class="bg-red-50 text-red-700 border border-red-200 text-xs px-3 py-1 rounded-full">{{ kw }}</span>
             }
           </div>
         </div>
       </div>
 
       <!-- Interview Tips -->
-      <div class="bg-white border border-gray-200 rounded-2xl p-6">
-        <h3 class="font-semibold text-gray-900 mb-4">💡 Interview Tips</h3>
+      <div class="bg-white border border-gray-200 rounded-2xl p-5 sm:p-6">
+        <h3 class="font-semibold text-gray-900 mb-4 text-sm sm:text-base">💡 Interview Tips</h3>
         <div class="space-y-3">
           @for (tip of result()!.interview_tips; track tip; let i = $index) {
             <div class="flex gap-3">

@@ -1,0 +1,174 @@
+<app-navbar />
+
+<div class="max-w-3xl mx-auto px-4 py-6 sm:py-10">
+
+  <!-- Page Header -->
+  <div class="mb-6 sm:mb-8">
+    <h1 class="text-xl sm:text-2xl font-bold text-gray-900">My Profile</h1>
+    <p class="text-gray-500 mt-1 text-sm">Manage your saved resume for AI analysis</p>
+  </div>
+
+  <!-- User Info Card -->
+  <div class="bg-white border border-gray-200 rounded-2xl p-5 sm:p-6 mb-5">
+    <div class="flex items-center gap-4">
+      <div class="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
+        <span class="text-primary-700 font-bold text-lg">
+          {{ (authService.currentUser()?.full_name || authService.currentUser()?.email || '?')[0].toUpperCase() }}
+        </span>
+      </div>
+      <div class="min-w-0">
+        <p class="font-semibold text-gray-900 text-sm sm:text-base truncate">
+          {{ authService.currentUser()?.full_name || 'No name set' }}
+        </p>
+        <p class="text-gray-500 text-xs sm:text-sm truncate">{{ authService.currentUser()?.email }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success / Error Messages -->
+  @if (successMsg()) {
+    <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-4 text-sm">
+      ✓ {{ successMsg() }}
+    </div>
+  }
+  @if (errorMsg()) {
+    <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">
+      {{ errorMsg() }}
+    </div>
+  }
+
+  <!-- Resume Card -->
+  <div class="bg-white border border-gray-200 rounded-2xl p-5 sm:p-6">
+
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <h2 class="text-base font-semibold text-gray-900">Saved Resume</h2>
+        <p class="text-xs text-gray-500 mt-0.5">Used automatically in AI analysis</p>
+      </div>
+      @if (hasResume() && !editMode()) {
+        <div class="flex gap-2">
+          <button (click)="startEdit()"
+            class="text-sm font-medium text-primary-600 hover:text-primary-700 px-3 py-1.5 rounded-lg hover:bg-primary-50 transition">
+            Edit
+          </button>
+          <button (click)="deleteResume()" [disabled]="deleting()"
+            class="text-sm font-medium text-red-500 hover:text-red-700 px-3 py-1.5 rounded-lg hover:bg-red-50 transition disabled:opacity-50">
+            {{ deleting() ? 'Deleting...' : 'Delete' }}
+          </button>
+        </div>
+      }
+    </div>
+
+    <!-- No resume saved yet -->
+    @if (!hasResume() && !editMode()) {
+      <div class="text-center py-10 border-2 border-dashed border-gray-200 rounded-xl">
+        <svg class="w-10 h-10 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        <p class="text-gray-500 text-sm font-medium">No resume saved yet</p>
+        <p class="text-gray-400 text-xs mt-1 mb-4">Upload a PDF or paste your resume text</p>
+        <button (click)="startEdit()"
+          class="bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium px-5 py-2 rounded-lg transition">
+          Add Resume
+        </button>
+      </div>
+    }
+
+    <!-- Saved resume preview (view mode) -->
+    @if (hasResume() && !editMode()) {
+      <div class="bg-gray-50 rounded-xl p-4 max-h-64 overflow-y-auto">
+        <pre class="text-xs text-gray-600 whitespace-pre-wrap font-sans leading-relaxed">{{ authService.savedResume() }}</pre>
+      </div>
+      <p class="text-xs text-gray-400 mt-2">
+        {{ authService.savedResume()?.length || 0 }} characters saved
+      </p>
+    }
+
+    <!-- Edit mode -->
+    @if (editMode()) {
+
+      <!-- Tabs: Text / Upload PDF -->
+      <div class="flex gap-1 p-1 bg-gray-100 rounded-lg mb-4 w-fit">
+        <button (click)="activeTab.set('text')"
+          [class]="activeTab() === 'text'
+            ? 'bg-white text-gray-900 shadow-sm'
+            : 'text-gray-500 hover:text-gray-700'"
+          class="px-4 py-1.5 rounded-md text-sm font-medium transition">
+          Paste Text
+        </button>
+        <button (click)="activeTab.set('upload')"
+          [class]="activeTab() === 'upload'
+            ? 'bg-white text-gray-900 shadow-sm'
+            : 'text-gray-500 hover:text-gray-700'"
+          class="px-4 py-1.5 rounded-md text-sm font-medium transition">
+          Upload PDF
+        </button>
+      </div>
+
+      <!-- Text tab -->
+      @if (activeTab() === 'text') {
+        @if (extractedPreview()) {
+          <div class="flex items-center gap-2 mb-2 text-xs text-green-700 bg-green-50 border border-green-200 px-3 py-2 rounded-lg">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            Text extracted from <strong>{{ selectedFileName() }}</strong> — review and save below
+          </div>
+        }
+        <textarea
+          [value]="draftText()"
+          (input)="draftText.set($any($event.target).value)"
+          rows="14"
+          placeholder="Paste your full resume text here..."
+          class="w-full text-sm text-gray-700 border border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-primary-500 outline-none resize-none font-sans leading-relaxed">
+        </textarea>
+        <p class="text-xs text-gray-400 mt-1">{{ draftText().length }} characters</p>
+      }
+
+      <!-- Upload PDF tab -->
+      @if (activeTab() === 'upload') {
+        <div class="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center hover:border-primary-300 transition">
+          @if (extracting()) {
+            <div class="flex flex-col items-center gap-3">
+              <svg class="animate-spin w-8 h-8 text-primary-500" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+              </svg>
+              <p class="text-sm text-gray-500">Extracting text from PDF...</p>
+            </div>
+          } @else {
+            <svg class="w-10 h-10 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+            </svg>
+            <p class="text-sm text-gray-600 font-medium mb-1">Click to upload your resume PDF</p>
+            <p class="text-xs text-gray-400 mb-4">PDF only · Max 5MB · Text will be extracted automatically</p>
+            <label class="bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium px-5 py-2 rounded-lg transition cursor-pointer">
+              Choose PDF
+              <input type="file" accept="application/pdf" class="hidden" (change)="onFileSelected($event)" />
+            </label>
+          }
+        </div>
+        @if (selectedFileName() && !extracting()) {
+          <p class="text-xs text-gray-500 mt-2 text-center">
+            📄 {{ selectedFileName() }} — text extracted, switch to Paste Text tab to review
+          </p>
+        }
+      }
+
+      <!-- Edit actions -->
+      <div class="flex gap-3 mt-4">
+        <button (click)="saveResume()" [disabled]="saving() || !draftText().trim()"
+          class="bg-primary-600 hover:bg-primary-700 disabled:bg-primary-300 text-white font-medium px-5 py-2 rounded-lg text-sm transition">
+          {{ saving() ? 'Saving...' : 'Save Resume' }}
+        </button>
+        <button (click)="cancelEdit()"
+          class="border border-gray-300 text-gray-600 hover:bg-gray-50 font-medium px-5 py-2 rounded-lg text-sm transition">
+          Cancel
+        </button>
+      </div>
+    }
+
+  </div>
+</div>
